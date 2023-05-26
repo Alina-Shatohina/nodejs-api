@@ -1,9 +1,12 @@
 const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 
 const { User } = require("../models/user");
 
 const { HttpError } = require("../helpers");
 const { ctrlWrapper } = require("../decorators");
+
+const { SECRET_KEY } = process.env;
 
 const register = async (req, res) => {
     const { email, password } = req.body;
@@ -34,7 +37,11 @@ const login = async (req, res) => {
     if (!passwordCompare) {
         throw HttpError(401, "Email or password is wrong");
     }
-    const token = "jhsdgkdkj.dshfkjdhdj.dhfd1255455";
+    const payload = {
+        id: user._id,
+    }
+
+    const token = jwt.sign(payload, SECRET_KEY, {expiresIn: "23h"});
 
     res.json({
         token,
@@ -44,5 +51,5 @@ const login = async (req, res) => {
 
 module.exports = {
     register: ctrlWrapper(register),
-    login: ctrlWrapper(ctrlWrapper),
+    login: ctrlWrapper(login),
 }
