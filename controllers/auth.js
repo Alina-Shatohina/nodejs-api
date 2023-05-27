@@ -21,8 +21,10 @@ const register = async (req, res) => {
     const newUser = await User.create({ ...req.body, password: hashPassword});
 
     res.status(201).json({
-        email: newUser.email,
-        name: newUser.name,
+        user:{email: newUser.email,
+        // name: newUser.name,
+        subscription: newUser.subscription},
+        
     })
 
 }
@@ -46,15 +48,18 @@ const login = async (req, res) => {
 
     res.json({
         token,
+        user: { email: user.email,
+        subscription: user.subscription},
+       
     })
 
 }
 
 const getCurrent = async (req, res) => {
-    const { email, name } = req.user;
+    const { email, subscription } = req.user;
     res.json({
         email,
-        name,
+        subscription,
     })
 }
 
@@ -62,12 +67,17 @@ const getCurrent = async (req, res) => {
 const logout = async (req, res) => {
     const {_id } = req.user;
     await User.findByIdAndUpdate(_id, { token: null });
-    res.json({
-        message: "No Content"
-    })
+    res.status(204).json();
 }
 
-
+// const updateStatusSubscription = async (req, res) => {
+//     const { id } = req.params;
+//     const result = await User.findByIdAndUpdate(id, req.body, {new: true});
+//     if (!result) {
+//       throw  HttpError(404)
+//     }
+//     res.json(result);
+// }
 
 
 module.exports = {
@@ -75,4 +85,5 @@ module.exports = {
     login: ctrlWrapper(login),
     getCurrent: ctrlWrapper(getCurrent),
     logout: ctrlWrapper(logout),
+    // updateStatusSubscription: ctrlWrapper(updateStatusSubscription),
 }
