@@ -6,13 +6,17 @@ const { ctrlWrapper } = require("../decorators");
 
 
 const listContacts = async (req, res) => {
-    const result = await Contact.find();
-    res.json(result);
+  const { _id: owner } = req.user;
+  const { page = 1, limit = 20 } = req.query;
+  const skip = (page - 1) * limit;
+  const result = await Contact.find({ owner }, "-createdAt -updateAt", { skip, limit }).populate("owner", "name email");
+  
+  res.json(result);
 }
 
 const getContactById =  async (req, res) => {
     const { id } = req.params;
-  const result = await Contact.findById(id);
+    const result = await Contact.findById(id);
     if (!result) {
         throw  HttpError(404)
       }
@@ -20,7 +24,8 @@ const getContactById =  async (req, res) => {
 }
 
 const addContact = async (req, res) => {
-  const result = await Contact.create(req.body);
+  const { _id: owner } = req.user;
+  const result = await Contact.create({ ...req.body, owner });
   res.status(201).json(result);
    
 }
