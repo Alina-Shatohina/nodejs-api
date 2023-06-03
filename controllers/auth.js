@@ -1,5 +1,8 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const gravatar = require("gravatar");
+const path = require("path");
+const fs = require("fs/promises");
 
 const { User } = require("../models/user");
 
@@ -7,6 +10,8 @@ const { HttpError } = require("../helpers");
 const { ctrlWrapper } = require("../decorators");
 
 const { SECRET_KEY } = process.env;
+
+const avatarsDir = path.join(__dirname, "../", "public", "avatars");
 
 const register = async (req, res) => {
     const { email, password } = req.body;
@@ -17,8 +22,9 @@ const register = async (req, res) => {
     }
 
     const hashPassword = await bcrypt.hash(password, 10);
+    const avatarURL = gravatar.url(email);
 
-    const newUser = await User.create({ ...req.body, password: hashPassword});
+    const newUser = await User.create({ ...req.body, password: hashPassword, avatarURL});
 
     res.status(201).json({
         user:{email: newUser.email,
@@ -70,14 +76,22 @@ const logout = async (req, res) => {
     res.status(204).json();
 }
 
-// const updateStatusSubscription = async (req, res) => {
-//     const { id } = req.params;
-//     const result = await User.findByIdAndUpdate(id, req.body, {new: true});
-//     if (!result) {
-//       throw  HttpError(404)
-//     }
-//     res.json(result);
-// }
+const updateAvatar = async (req, res) => {
+    const uniq = Math.round(Math.random() * 1E9);
+    const { _id } = req.user;
+    const { path: tempUpload, originalname } = req.file;
+    const filename = `${_id}_${uniq}_${originalname}`;
+    const resultUpload = path.join(avatarsDir, filename);
+    await fs.rename(tempUpload, resultUpload);
+    const avatarURL = path.join("avatars", filename);
+    await User.findByIdAndUpdate(_id, { avatarURL });
+    
+    res.json({
+        avatarURL,
+    })
+
+}
+
 
 
 module.exports = {
@@ -85,5 +99,5 @@ module.exports = {
     login: ctrlWrapper(login),
     getCurrent: ctrlWrapper(getCurrent),
     logout: ctrlWrapper(logout),
-    // updateStatusSubscription: ctrlWrapper(updateStatusSubscription),
+    updateAvatar: ctrlWrapper(updateAvatar),
 }
