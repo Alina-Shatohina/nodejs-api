@@ -52,15 +52,11 @@ const loginSchema = Joi.object({
     password: Joi.string().min(6).required(),
 })
 
-// const updateSubscriptionSchema = Joi.object({
-//   subscription: Joi.string(),
-// })
-
 
 const schemas = {
     registerSchema,
     loginSchema,
-    // updateSubscriptionSchema,
+
 }
 
 
